@@ -16,3 +16,5 @@ Where the training and test set have been put into an 80%/20% split respectively
 I will try and see if I can increase the accuracy of my predictions.
 
 I have also added an investigation of feature importance on the data set using random forests.  This can be seen in the graph given in my uploaded files (or you can run the code).
+
+![alt text](https://github.com/bgoodman90/Breast-Cancer-Wisconsin-Dataset-Investigation/blob/master/FeatureImportance.png)
