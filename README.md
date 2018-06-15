@@ -7,7 +7,7 @@ In our dataset  212  people had malignant cancer, and  357  people had benign ca
 
 I had heard somewhere that logistic regression worked really well on cancer datasets and wanted to confirm it for myself.  So far the dataset only has a logistic regression model which is very accurate with the following result:
 
-CV accuracy: 0.981 +/- 0.018
+CV accuracy: 0.981 +/- 0.018 (standard deviation)
 
 Test accuracy: 0.982
 
