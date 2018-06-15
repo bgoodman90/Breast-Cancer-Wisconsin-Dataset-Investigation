@@ -131,6 +131,8 @@ for f in range(X_train.shape[1]):
      print("%2d) %-*s %f" % (f + 1, 30, feat_labels[indices[f]], importances[indices[f]]))
 
 plt.title('Feature Importance')
+plt.xlabel('Features')
+plt.ylabel('Feature Importance (Normalized)')
 plt.bar(range(X_train.shape[1]), importances[indices], align='center')
 
 plt.xticks(range(X_train.shape[1]), feat_labels, rotation=90)
