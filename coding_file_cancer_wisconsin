@@ -1,0 +1,108 @@
+#This file uses machine learning models to analyze the Breast Cancer Wisconsin (Diagnostic) Data Set
+#this dataset can be found on Kaggle or elsewhere
+#the dataset is to be used to determine whether cancer is benign or malignant
+#It is coded in Python 3.6.2
+
+import pandas as pd
+import numpy as np
+
+from pandas import DataFrame
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.decomposition import PCA
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import cross_val_score
+from sklearn.metrics import accuracy_score
+from sklearn.svm import SVC
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import VotingClassifier
+from sklearn.ensemble import BaggingClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.naive_bayes import BernoulliNB
+import xgboost
+
+df = pd.read_csv('cancer_data.csv',sep=',')
+df_out = df['diagnosis']
+df_in = df.drop(['diagnosis','id'], axis=1)
+
+print('there are ',df.shape[0],' people in the data set')
+
+print(df_in.head())
+
+print('number of missing values in each feature are: ',df_in.isnull().sum())
+print('As such, there are no missing values')
+
+from sklearn.preprocessing import LabelEncoder#this is used for encoding categorical values to 0,1,2... (in order)
+malben_le = LabelEncoder()#we need to encode M for malignant and B for benign into numbers
+
+Y_out = df_out.values
+
+Y_out = malben_le.fit_transform(Y_out)#encoding gender feature so Malignant (M)->1, Benign (B)->0
+
+X = df_in.values
+
+print('In our training dataset ',sum(Y_out == 1),' people had malignant cancer, and ',sum(Y_out == 0),\
+      ' people had benign cancer.')
+print('As such ',sum(Y_out == 0)/(sum(Y_out == 0)+sum(Y_out == 1))*100, \
+      ' percent of the people had benign cancer.')
+#this last line is to check if our classes are imbalanced or not
+
+#Scaling
+stdsc = StandardScaler()
+X_std = stdsc.fit_transform(X)#standardize the values of our input set
+
+#now we are going to split our training data into training and testing data, the reason for this is so that we can
+#test for overfitting and such
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test =\
+    train_test_split(X_std, Y_out,\
+    test_size = 0.2,\
+    random_state = 1,\
+    stratify = Y_out)#this makes sure the training and test datasets have same class proportions
+
+
+#######################################################################################################
+#######################################################################################################
+#######################################################################################################
+
+#Logistic Regression Estimator
+'''param_range = []
+for c in np.arange(-10, 10):
+    param_range.append(10.**c)'''
+#print(params)
+
+param_range = [.5, 1, 10, 50]#already saw regulation parameter 10^0=1 was most favourable
+
+'''param_grid = [{'svc__C': param_range, 'svc__kernel': ['linear']},\
+    {'svc__C': param_range, 'svc__gamma': param_range, 'svc__kernel': ['rbf']}]'''
+param_grid = [{'C': param_range}]
+
+gslr = GridSearchCV(estimator=LogisticRegression(random_state=0),\
+    param_grid=param_grid,\
+    scoring='accuracy',\
+    cv=10)
+
+gslr = gslr.fit(X_train, y_train)
+
+print('For Logistic Regression')
+print('The best regulation parameter choice is: ',gslr.best_params_)
+print('The best score is: %.3f' % (gslr.best_score_))
+
+lreg_best = gslr.best_estimator_ #uses the best parameter values found via grid search
+
+scores_lreg = cross_val_score(estimator=lreg_best, X=X_std, y=Y_out, cv=10, n_jobs=1)
+print('CV accuracy: %.3f +/- %.3f' % (np.mean(scores_lreg), np.std(scores_lreg)))
+
+lreg_best.fit(X_train, y_train)
+print('Test accuracy: %.3f' % lreg_best.score(X_test, y_test))
+
+'''lr = LogisticRegression(C=1, random_state=1)
+scores = cross_val_score(estimator=lr, X=X_train_std, y=Y_out, cv=10, n_jobs=1)
+print('LR CV accuracy scores: %s' % scores)
+print('LR CV accuracy: %.3f +/- %.3f' % (np.mean(scores), np.std(scores)))'''
