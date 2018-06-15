@@ -47,7 +47,7 @@ Y_out = malben_le.fit_transform(Y_out)#encoding gender feature so Malignant (M)-
 
 X = df_in.values
 
-print('In our training dataset ',sum(Y_out == 1),' people had malignant cancer, and ',sum(Y_out == 0),\
+print('In our dataset ',sum(Y_out == 1),' people had malignant cancer, and ',sum(Y_out == 0),\
       ' people had benign cancer.')
 print('As such ',sum(Y_out == 0)/(sum(Y_out == 0)+sum(Y_out == 1))*100, \
       ' percent of the people had benign cancer.')
@@ -72,18 +72,17 @@ X_train, X_test, y_train, y_test =\
 #######################################################################################################
 
 #Logistic Regression Estimator
-'''param_range = []
-for c in np.arange(-10, 10):
-    param_range.append(10.**c)'''
-#print(params)
 
-param_range = [.5, 1, 10, 50]#already saw regulation parameter 10^0=1 was most favourable
+pipe_lr = make_pipeline(PCA(), LogisticRegression(random_state=0))
+print(pipe_lr.get_params().keys())
+param_range = [.1, .5, 1, 10, 50]#regularization parameter for logistic regression
+n_components=np.arange(3,31,1)#the number of components PCA reduces the data to
+print(n_components)
+param_grid = [{'pca__n_components': n_components, 'logisticregression__C': param_range}]
 
-'''param_grid = [{'svc__C': param_range, 'svc__kernel': ['linear']},\
-    {'svc__C': param_range, 'svc__gamma': param_range, 'svc__kernel': ['rbf']}]'''
-param_grid = [{'C': param_range}]
+#param_grid = [{'C': param_range}]
 
-gslr = GridSearchCV(estimator=LogisticRegression(random_state=0),\
+gslr = GridSearchCV(estimator= pipe_lr,\
     param_grid=param_grid,\
     scoring='accuracy',\
     cv=10)
@@ -106,3 +105,35 @@ print('Test accuracy: %.3f' % lreg_best.score(X_test, y_test))
 scores = cross_val_score(estimator=lr, X=X_train_std, y=Y_out, cv=10, n_jobs=1)
 print('LR CV accuracy scores: %s' % scores)
 print('LR CV accuracy: %.3f +/- %.3f' % (np.mean(scores), np.std(scores)))'''
+
+
+#######################################################################################################
+#######################################################################################################
+#######################################################################################################
+
+correlation = np.corrcoef(X_std, X_std,rowvar=False)#variables are marked by columns not rows
+print('The normalized covariance matrix is')
+print(correlation)
+#Evaluating feature importance using Random Forest
+
+import matplotlib.pyplot as plt
+
+feat_labels = df_in.columns #a list of the feature names in the data set
+
+forest = RandomForestClassifier(n_estimators=500, random_state=1)
+
+forest.fit(X_train, y_train)
+importances = forest.feature_importances_
+
+indices = np.argsort(importances)[::-1]
+
+for f in range(X_train.shape[1]):
+     print("%2d) %-*s %f" % (f + 1, 30, feat_labels[indices[f]], importances[indices[f]]))
+
+plt.title('Feature Importance')
+plt.bar(range(X_train.shape[1]), importances[indices], align='center')
+
+plt.xticks(range(X_train.shape[1]), feat_labels, rotation=90)
+plt.xlim([-1, X_train.shape[1]])
+plt.tight_layout()
+plt.show()
